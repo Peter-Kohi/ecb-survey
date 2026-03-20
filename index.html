@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cảm ơn bạn đã tham gia khảo sát!</title>
+  <title>Khảo sát UI ECB</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -48,21 +48,45 @@
       line-height: 1.7;
       margin-bottom: 0.5rem;
     }
-    .brand {
-      font-weight: 600;
-      color: #534AB7;
-    }
-    .sub {
-      font-size: 13px;
+    .brand { font-weight: 600; color: #534AB7; }
+    .sub { font-size: 13px; color: #888; margin-top: 1rem; }
+    .loading {
+      font-size: 15px;
       color: #888;
       margin-top: 1rem;
     }
+    .btn {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 0.75rem 2rem;
+      background: #534AB7;
+      color: #fff;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+    }
+    .btn:hover { background: #3C3489; }
+    #thank-you { display: none; }
   </style>
 </head>
 <body>
+
   <canvas id="confetti-canvas"></canvas>
 
-  <div class="card">
+  <!-- Trang loading chờ redirect -->
+  <div class="card" id="loading-screen">
+    <div class="emoji">📋</div>
+    <h1>Đang chuyển đến khảo sát...</h1>
+    <p class="loading">Bạn sẽ được chuyển sang Google Form trong giây lát.</p>
+    <p class="sub">Nếu không tự chuyển, nhấn nút bên dưới 👇</p>
+    <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSdBs09_bBQA04FwT_S-IYezsu3e70zzZbZukQetQJT5A6wHgA/viewform?usp=dialog">Đến khảo sát</a>
+  </div>
+
+  <!-- Trang cảm ơn sau khi submit -->
+  <div class="card" id="thank-you">
     <div class="emoji">🎉</div>
     <h1>Cảm ơn bạn đã hoàn thành khảo sát!</h1>
     <p>Ý kiến của bạn sẽ giúp <span class="brand">ECB / Ecombox</span> ngày càng hoàn thiện hơn.</p>
@@ -71,49 +95,64 @@
   </div>
 
   <script>
-    const canvas = document.getElementById('confetti-canvas');
-    const ctx = canvas.getContext('2d');
+    const params = new URLSearchParams(window.location.search);
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    if (params.get('submitted') === 'true') {
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('thank-you').style.display = 'block';
+      startConfetti();
+    } else {
+      setTimeout(() => {
+        window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSdBs09_bBQA04FwT_S-IYezsu3e70zzZbZukQetQJT5A6wHgA/viewform?usp=dialog";
+      }, 2000);
     }
-    resize();
-    window.addEventListener('resize', resize);
 
-    const colors = ['#7F77DD','#1D9E75','#D85A30','#378ADD','#D4537E','#EF9F27','#639922','#F0997B','#5DCAA5'];
-    const pieces = Array.from({ length: 150 }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight - window.innerHeight,
-      w: Math.random() * 10 + 5,
-      h: Math.random() * 5 + 3,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      speed: Math.random() * 3 + 1.5,
-      angle: Math.random() * 360,
-      spin: (Math.random() - 0.5) * 4,
-      drift: (Math.random() - 0.5) * 1.5
-    }));
+    function startConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pieces.forEach(p => {
-        ctx.save();
-        ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
-        ctx.rotate(p.angle * Math.PI / 180);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-        ctx.restore();
-        p.y += p.speed;
-        p.x += p.drift;
-        p.angle += p.spin;
-        if (p.y > canvas.height) {
-          p.y = -10;
-          p.x = Math.random() * canvas.width;
-        }
-      });
-      requestAnimationFrame(draw);
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const colors = ['#7F77DD','#1D9E75','#D85A30','#378ADD','#D4537E','#EF9F27','#639922','#F0997B','#5DCAA5'];
+      const pieces = Array.from({ length: 150 }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight - window.innerHeight,
+        w: Math.random() * 10 + 5,
+        h: Math.random() * 5 + 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        speed: Math.random() * 3 + 1.5,
+        angle: Math.random() * 360,
+        spin: (Math.random() - 0.5) * 4,
+        drift: (Math.random() - 0.5) * 1.5
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          ctx.save();
+          ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+          ctx.rotate(p.angle * Math.PI / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+          p.y += p.speed;
+          p.x += p.drift;
+          p.angle += p.spin;
+          if (p.y > canvas.height) {
+            p.y = -10;
+            p.x = Math.random() * canvas.width;
+          }
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
     }
-    draw();
   </script>
+
 </body>
 </html>
